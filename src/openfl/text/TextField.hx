@@ -3543,7 +3543,15 @@ class TextField extends InteractiveObject
 	@:noCompletion private function window_onKeyDown(key:KeyCode, modifier:KeyModifier):Void
 	{
 		inline function isModifierPressed()
-			return #if mac modifier.metaKey #elseif js(modifier.metaKey || modifier.ctrlKey) #else (modifier.ctrlKey && !modifier.altKey) #end;
+		{
+			#if (mac || ios || tvos)
+			return modifier.metaKey;
+			#elseif js
+			return modifier.metaKey || modifier.ctrlKey;
+			#else
+			return modifier.ctrlKey && !modifier.altKey;
+			#end
+		}
 
 		switch (key)
 		{
@@ -3735,7 +3743,7 @@ class TextField extends InteractiveObject
 			#if !js
 			case V:
 				#if lime
-				if (#if mac modifier.metaKey #else modifier.ctrlKey && !modifier.altKey #end)
+				if (isModifierPressed())
 				{
 					if (Clipboard.text != null)
 					{
