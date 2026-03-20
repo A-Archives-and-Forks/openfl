@@ -3745,15 +3745,16 @@ class TextField extends InteractiveObject
 				#if lime
 				if (isModifierPressed())
 				{
-					if (Clipboard.text != null)
+					var clipboardText = Clipboard.text;
+					if (clipboardText != null)
 					{
-						var te = new TextEvent(TextEvent.TEXT_INPUT, true, true, Clipboard.text);
+						var te = new TextEvent(TextEvent.TEXT_INPUT, true, true, clipboardText);
 
 						dispatchEvent(te);
 
 						if (!te.isDefaultPrevented())
 						{
-							__replaceSelectedText(Clipboard.text, true);
+							__replaceSelectedText(clipboardText, true);
 
 							dispatchEvent(new Event(Event.CHANGE, true));
 						}
