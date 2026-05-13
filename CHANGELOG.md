@@ -17,6 +17,7 @@ Changelog
 - Fixed reading text from clipboard too frequently on paste into `TextField`.
 - Fixed `Sprite` container failing to update its cached bitmap when final child is removed.
 - Fixed `scrollRect` failing to update rendered display object when `cacheAsBitmap` is also true.
+- Fixed webassembly compilation issues with shaders.
 
 9.5.1 (02/16/2026)
 ------------------
