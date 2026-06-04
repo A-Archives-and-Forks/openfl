@@ -408,11 +408,7 @@ class Sound extends EventDispatcher
 	public static function fromFile(path:String):Sound
 	{
 		#if lime
-		#if (lime >= "8.4.0")
-		var buffer = AudioBuffer.fromFileStream(path);
-		#else
 		var buffer = AudioBuffer.fromFile(path);
-		#end
 		if (buffer == null)
 		{
 			throw new IOError("Error loading sound from file: " + path);
