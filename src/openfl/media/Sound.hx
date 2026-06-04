@@ -518,15 +518,6 @@ class Sound extends EventDispatcher
 		}
 		else
 		{
-			#if (lime >= "8.4.0")
-			AudioBuffer.loadFromFileStream(url)
-				.onProgress(AudioBuffer_onURLProgress)
-				.onComplete(AudioBuffer_onURLLoad)
-				.onError(function(_)
-				{
-					AudioBuffer_onURLLoad(null);
-				});
-			#else
 			AudioBuffer.loadFromFile(url)
 				.onProgress(AudioBuffer_onURLProgress)
 				.onComplete(AudioBuffer_onURLLoad)
@@ -534,17 +525,7 @@ class Sound extends EventDispatcher
 				{
 					AudioBuffer_onURLLoad(null);
 				});
-			#end
 		}
-		#else
-		#if (lime >= "8.4.0")
-		AudioBuffer.loadFromFileStream(url)
-			.onProgress(AudioBuffer_onURLProgress)
-			.onComplete(AudioBuffer_onURLLoad)
-			.onError(function(_)
-			{
-				AudioBuffer_onURLLoad(null);
-			});
 		#else
 		AudioBuffer.loadFromFile(url)
 			.onProgress(AudioBuffer_onURLProgress)
@@ -553,7 +534,6 @@ class Sound extends EventDispatcher
 			{
 				AudioBuffer_onURLLoad(null);
 			});
-		#end
 		#end
 		#end
 	}
@@ -583,11 +563,7 @@ class Sound extends EventDispatcher
 		}
 
 		#if lime
-		#if (lime >= "8.4.0")
-		__buffer = AudioBuffer.fromBytesStream(bytes);
-		#else
 		__buffer = AudioBuffer.fromBytes(bytes);
-		#end
 
 		if (__buffer == null)
 		{
@@ -617,11 +593,7 @@ class Sound extends EventDispatcher
 	public static function loadFromFile(path:String):Future<Sound>
 	{
 		#if lime
-		#if (lime >= "8.4.0")
-		return AudioBuffer.loadFromFileStream(path).then(function(audioBuffer)
-		#else
 		return AudioBuffer.loadFromFile(path).then(function(audioBuffer)
-		#end
 		{
 			return Future.withValue(fromAudioBuffer(audioBuffer));
 		});
@@ -644,11 +616,7 @@ class Sound extends EventDispatcher
 	public static function loadFromFiles(paths:Array<String>):Future<Sound>
 	{
 		#if lime
-		#if (lime >= "8.4.0")
-		return AudioBuffer.loadFromFilesStream(paths).then(function(audioBuffer)
-		#else
 		return AudioBuffer.loadFromFiles(paths).then(function(audioBuffer)
-		#end
 		{
 			return Future.withValue(fromAudioBuffer(audioBuffer));
 		});
