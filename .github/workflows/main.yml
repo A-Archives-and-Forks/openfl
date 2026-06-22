@@ -125,7 +125,6 @@ jobs:
   unit-test-lime-develop:
     runs-on: macos-latest
     env:
-      SDL_VIDEODRIVER: "dummy"
       SDL_AUDIODRIVER: "disk"
     steps:
       - uses: actions/checkout@v6
@@ -167,7 +166,9 @@ jobs:
 
       - name: Install HashLink dependencies with Homebrew
         run: |
-          arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+          if [ ! -x /usr/local/bin/brew ]; then
+            NONINTERACTIVE=1 arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+          fi
           pushd ${{ github.workspace }}/lime-develop/project/lib/hashlink
           arch -x86_64 /usr/local/bin/brew update
           rm /usr/local/bin/2to3*
@@ -175,7 +176,7 @@ jobs:
           rm /usr/local/bin/pydoc3*
           rm /usr/local/bin/python3*
           rm /usr/local/bin/pip3*
-          arch -x86_64 /usr/local/bin/brew bundle
+          HOMEBREW_BUNDLE_BREW_SKIP="cmake" arch -x86_64 /usr/local/bin/brew bundle
           popd
 
       - name: Rebuild Lime
