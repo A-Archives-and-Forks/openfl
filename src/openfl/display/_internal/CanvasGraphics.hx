@@ -1987,11 +1987,23 @@ class CanvasGraphics
 	public static function render(graphics:Graphics, renderer:CanvasRenderer):Void
 	{
 		#if (js && html5)
+		CanvasGraphics.graphics = graphics;
+		CanvasGraphics.allowSmoothing = renderer.__allowSmoothing;
+		CanvasGraphics.worldAlpha = renderer.__getAlpha(graphics.__owner.__worldAlpha);
+
 		#if (openfl_disable_hdpi || openfl_disable_hdpi_graphics)
 		var pixelRatio = 1;
 		#else
 		var pixelRatio = renderer.__pixelRatio;
 		#end
+
+		graphics.__update(renderer.__worldTransform, pixelRatio);
+
+		if (!graphics.__softwareDirty || graphics.__managed)
+		{
+			CanvasGraphics.graphics = null;
+			return;
+		}
 
 		var scale9Grid:Rectangle = graphics.__owner.__scale9Grid;
 		#if (openfl_legacy_scale9grid && !canvas)
@@ -2012,338 +2024,330 @@ class CanvasGraphics
 			graphics.__bitmapScaleY = 1;
 		}
 
-		graphics.__update(renderer.__worldTransform, pixelRatio);
+		hitTesting = false;
 
-		if (graphics.__softwareDirty)
+		bounds = graphics.__bounds;
+
+		var width = graphics.__width;
+		var height = graphics.__height;
+
+		if (!graphics.__visible || graphics.__commands.length == 0 || bounds == null || width < 1 || height < 1)
 		{
-			hitTesting = false;
-
-			CanvasGraphics.graphics = graphics;
-			CanvasGraphics.allowSmoothing = renderer.__allowSmoothing;
-			CanvasGraphics.worldAlpha = renderer.__getAlpha(graphics.__owner.__worldAlpha);
-			bounds = graphics.__bounds;
-
-			var width = graphics.__width;
-			var height = graphics.__height;
-
-			if (!graphics.__visible || graphics.__commands.length == 0 || bounds == null || width < 1 || height < 1)
+			graphics.__canvas = null;
+			graphics.__context = null;
+			graphics.__bitmap = null;
+		}
+		else
+		{
+			if (graphics.__canvas == null)
 			{
-				graphics.__canvas = null;
-				graphics.__context = null;
-				graphics.__bitmap = null;
+				graphics.__canvas = cast Browser.document.createElement("canvas");
+				graphics.__context = graphics.__canvas.getContext("2d");
+			}
+
+			context = graphics.__context;
+			var transform = graphics.__renderTransform;
+			var canvas = graphics.__canvas;
+
+			var scale = renderer.__pixelRatio;
+			var scaledWidth = Std.int(width * scale);
+			var scaledHeight = Std.int(height * scale);
+
+			renderer.__setBlendModeContext(context, NORMAL);
+
+			if (renderer.__isDOM)
+			{
+				if (canvas.width == scaledWidth && canvas.height == scaledHeight)
+				{
+					context.clearRect(0, 0, scaledWidth, scaledHeight);
+				}
+				else
+				{
+					canvas.width = scaledWidth;
+					canvas.height = scaledHeight;
+					canvas.style.width = width + "px";
+					canvas.style.height = height + "px";
+				}
+
+				var transform = graphics.__renderTransform;
+				context.setTransform(transform.a * scale, transform.b * scale, transform.c * scale, transform.d * scale, transform.tx * scale,
+					transform.ty * scale);
 			}
 			else
 			{
-				if (graphics.__canvas == null)
+				if (canvas.width == scaledWidth && canvas.height == scaledHeight)
 				{
-					graphics.__canvas = cast Browser.document.createElement("canvas");
-					graphics.__context = graphics.__canvas.getContext("2d");
-				}
-
-				context = graphics.__context;
-				var transform = graphics.__renderTransform;
-				var canvas = graphics.__canvas;
-
-				var scale = renderer.__pixelRatio;
-				var scaledWidth = Std.int(width * scale);
-				var scaledHeight = Std.int(height * scale);
-
-				renderer.__setBlendModeContext(context, NORMAL);
-
-				if (renderer.__isDOM)
-				{
-					if (canvas.width == scaledWidth && canvas.height == scaledHeight)
-					{
-						context.clearRect(0, 0, scaledWidth, scaledHeight);
-					}
-					else
-					{
-						canvas.width = scaledWidth;
-						canvas.height = scaledHeight;
-						canvas.style.width = width + "px";
-						canvas.style.height = height + "px";
-					}
-
-					var transform = graphics.__renderTransform;
-					context.setTransform(transform.a * scale, transform.b * scale, transform.c * scale, transform.d * scale, transform.tx * scale,
-						transform.ty * scale);
+					context.closePath();
+					context.setTransform(1, 0, 0, 1, 0, 0);
+					context.clearRect(0, 0, scaledWidth, scaledHeight);
 				}
 				else
 				{
-					if (canvas.width == scaledWidth && canvas.height == scaledHeight)
-					{
-						context.closePath();
-						context.setTransform(1, 0, 0, 1, 0, 0);
-						context.clearRect(0, 0, scaledWidth, scaledHeight);
-					}
-					else
-					{
-						canvas.width = width;
-						canvas.height = height;
-					}
-
-					context.setTransform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+					canvas.width = width;
+					canvas.height = height;
 				}
 
-				fillCommands.clear();
-				strokeCommands.clear();
+				context.setTransform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+			}
 
-				hasFill = false;
-				hasStroke = false;
-				bitmapFill = null;
-				bitmapRepeat = false;
+			fillCommands.clear();
+			strokeCommands.clear();
 
-				var hasLineStyle = false;
-				var initStrokeX = 0.0;
-				var initStrokeY = 0.0;
+			hasFill = false;
+			hasStroke = false;
+			bitmapFill = null;
+			bitmapRepeat = false;
 
-				windingRule = CanvasWindingRule.EVENODD;
+			var hasLineStyle = false;
+			var initStrokeX = 0.0;
+			var initStrokeY = 0.0;
 
-				var data = new DrawCommandReader(graphics.__commands);
+			windingRule = CanvasWindingRule.EVENODD;
 
-				for (type in graphics.__commands.types)
+			var data = new DrawCommandReader(graphics.__commands);
+
+			for (type in graphics.__commands.types)
+			{
+				switch (type)
 				{
-					switch (type)
-					{
-						case CUBIC_CURVE_TO:
-							var c = data.readCubicCurveTo();
-							fillCommands.cubicCurveTo(c.controlX1, c.controlY1, c.controlX2, c.controlY2, c.anchorX, c.anchorY);
+					case CUBIC_CURVE_TO:
+						var c = data.readCubicCurveTo();
+						fillCommands.cubicCurveTo(c.controlX1, c.controlY1, c.controlX2, c.controlY2, c.anchorX, c.anchorY);
 
-							if (hasLineStyle)
-							{
-								strokeCommands.cubicCurveTo(c.controlX1, c.controlY1, c.controlX2, c.controlY2, c.anchorX, c.anchorY);
-							}
-							else
-							{
-								initStrokeX = c.anchorX;
-								initStrokeY = c.anchorY;
-							}
+						if (hasLineStyle)
+						{
+							strokeCommands.cubicCurveTo(c.controlX1, c.controlY1, c.controlX2, c.controlY2, c.anchorX, c.anchorY);
+						}
+						else
+						{
+							initStrokeX = c.anchorX;
+							initStrokeY = c.anchorY;
+						}
 
-						case CURVE_TO:
-							var c = data.readCurveTo();
-							fillCommands.curveTo(c.controlX, c.controlY, c.anchorX, c.anchorY);
+					case CURVE_TO:
+						var c = data.readCurveTo();
+						fillCommands.curveTo(c.controlX, c.controlY, c.anchorX, c.anchorY);
 
-							if (hasLineStyle)
-							{
-								strokeCommands.curveTo(c.controlX, c.controlY, c.anchorX, c.anchorY);
-							}
-							else
-							{
-								initStrokeX = c.anchorX;
-								initStrokeY = c.anchorY;
-							}
+						if (hasLineStyle)
+						{
+							strokeCommands.curveTo(c.controlX, c.controlY, c.anchorX, c.anchorY);
+						}
+						else
+						{
+							initStrokeX = c.anchorX;
+							initStrokeY = c.anchorY;
+						}
 
-						case LINE_TO:
-							var c = data.readLineTo();
-							fillCommands.lineTo(c.x, c.y);
+					case LINE_TO:
+						var c = data.readLineTo();
+						fillCommands.lineTo(c.x, c.y);
 
-							if (hasLineStyle)
-							{
-								strokeCommands.lineTo(c.x, c.y);
-							}
-							else
-							{
-								initStrokeX = c.x;
-								initStrokeY = c.y;
-							}
+						if (hasLineStyle)
+						{
+							strokeCommands.lineTo(c.x, c.y);
+						}
+						else
+						{
+							initStrokeX = c.x;
+							initStrokeY = c.y;
+						}
 
-						case MOVE_TO:
-							var c = data.readMoveTo();
-							fillCommands.moveTo(c.x, c.y);
+					case MOVE_TO:
+						var c = data.readMoveTo();
+						fillCommands.moveTo(c.x, c.y);
 
-							if (hasLineStyle)
-							{
-								strokeCommands.moveTo(c.x, c.y);
-							}
-							else
-							{
-								initStrokeX = c.x;
-								initStrokeY = c.y;
-							}
+						if (hasLineStyle)
+						{
+							strokeCommands.moveTo(c.x, c.y);
+						}
+						else
+						{
+							initStrokeX = c.x;
+							initStrokeY = c.y;
+						}
 
-						case END_FILL:
-							data.readEndFill();
-							endFill();
-							endStroke();
-							hasFill = false;
-							bitmapFill = null;
+					case END_FILL:
+						data.readEndFill();
+						endFill();
+						endStroke();
+						hasFill = false;
+						bitmapFill = null;
+						initStrokeX = 0;
+						initStrokeY = 0;
+
+					case LINE_GRADIENT_STYLE:
+						var c = data.readLineGradientStyle();
+
+						if (!hasLineStyle && (initStrokeX != 0 || initStrokeY != 0))
+						{
+							strokeCommands.moveTo(initStrokeX, initStrokeY);
 							initStrokeX = 0;
 							initStrokeY = 0;
+						}
 
-						case LINE_GRADIENT_STYLE:
-							var c = data.readLineGradientStyle();
+						hasLineStyle = true;
+						strokeCommands.lineGradientStyle(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
+							c.focalPointRatio);
 
-							if (!hasLineStyle && (initStrokeX != 0 || initStrokeY != 0))
+					case LINE_BITMAP_STYLE:
+						var c = data.readLineBitmapStyle();
+
+						if (!hasLineStyle && (initStrokeX != 0 || initStrokeY != 0))
+						{
+							strokeCommands.moveTo(initStrokeX, initStrokeY);
+							initStrokeX = 0;
+							initStrokeY = 0;
+						}
+
+						hasLineStyle = true;
+						strokeCommands.lineBitmapStyle(c.bitmap, c.matrix, c.repeat, c.smooth);
+
+					case LINE_STYLE:
+						var c = data.readLineStyle();
+
+						if (!hasLineStyle && c.thickness != null)
+						{
+							if (initStrokeX != 0 || initStrokeY != 0)
 							{
 								strokeCommands.moveTo(initStrokeX, initStrokeY);
 								initStrokeX = 0;
 								initStrokeY = 0;
 							}
+						}
 
-							hasLineStyle = true;
-							strokeCommands.lineGradientStyle(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
+						hasLineStyle = c.thickness != null;
+						strokeCommands.lineStyle(c.thickness, c.color, c.alpha, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
+
+					case BEGIN_BITMAP_FILL, BEGIN_FILL, BEGIN_GRADIENT_FILL, BEGIN_SHADER_FILL:
+						endFill();
+						endStroke();
+
+						if (type == BEGIN_BITMAP_FILL)
+						{
+							var c = data.readBeginBitmapFill();
+							fillCommands.beginBitmapFill(c.bitmap, c.matrix, c.repeat, c.smooth);
+							strokeCommands.beginBitmapFill(c.bitmap, c.matrix, c.repeat, c.smooth);
+						}
+						else if (type == BEGIN_GRADIENT_FILL)
+						{
+							var c = data.readBeginGradientFill();
+							fillCommands.beginGradientFill(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
 								c.focalPointRatio);
+							strokeCommands.beginGradientFill(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
+								c.focalPointRatio);
+						}
+						else if (type == BEGIN_SHADER_FILL)
+						{
+							var c = data.readBeginShaderFill();
+							fillCommands.beginShaderFill(c.shaderBuffer);
+							strokeCommands.beginShaderFill(c.shaderBuffer);
+						}
+						else
+						{
+							var c = data.readBeginFill();
+							fillCommands.beginFill(c.color, c.alpha);
+							strokeCommands.beginFill(c.color, c.alpha);
+						}
 
-						case LINE_BITMAP_STYLE:
-							var c = data.readLineBitmapStyle();
+					case DRAW_CIRCLE:
+						var c = data.readDrawCircle();
+						fillCommands.drawCircle(c.x, c.y, c.radius);
 
-							if (!hasLineStyle && (initStrokeX != 0 || initStrokeY != 0))
-							{
-								strokeCommands.moveTo(initStrokeX, initStrokeY);
-								initStrokeX = 0;
-								initStrokeY = 0;
-							}
+						if (hasLineStyle)
+						{
+							strokeCommands.drawCircle(c.x, c.y, c.radius);
+						}
 
-							hasLineStyle = true;
-							strokeCommands.lineBitmapStyle(c.bitmap, c.matrix, c.repeat, c.smooth);
+					case DRAW_ELLIPSE:
+						var c = data.readDrawEllipse();
+						fillCommands.drawEllipse(c.x, c.y, c.width, c.height);
 
-						case LINE_STYLE:
-							var c = data.readLineStyle();
+						if (hasLineStyle)
+						{
+							strokeCommands.drawEllipse(c.x, c.y, c.width, c.height);
+						}
 
-							if (!hasLineStyle && c.thickness != null)
-							{
-								if (initStrokeX != 0 || initStrokeY != 0)
-								{
-									strokeCommands.moveTo(initStrokeX, initStrokeY);
-									initStrokeX = 0;
-									initStrokeY = 0;
-								}
-							}
+					case DRAW_RECT:
+						var c = data.readDrawRect();
+						fillCommands.drawRect(c.x, c.y, c.width, c.height);
 
-							hasLineStyle = c.thickness != null;
-							strokeCommands.lineStyle(c.thickness, c.color, c.alpha, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
+						if (hasLineStyle)
+						{
+							strokeCommands.drawRect(c.x, c.y, c.width, c.height);
+						}
 
-						case BEGIN_BITMAP_FILL, BEGIN_FILL, BEGIN_GRADIENT_FILL, BEGIN_SHADER_FILL:
-							endFill();
-							endStroke();
+					case DRAW_ROUND_RECT:
+						var c = data.readDrawRoundRect();
+						fillCommands.drawRoundRect(c.x, c.y, c.width, c.height, c.ellipseWidth, c.ellipseHeight);
 
-							if (type == BEGIN_BITMAP_FILL)
-							{
-								var c = data.readBeginBitmapFill();
-								fillCommands.beginBitmapFill(c.bitmap, c.matrix, c.repeat, c.smooth);
-								strokeCommands.beginBitmapFill(c.bitmap, c.matrix, c.repeat, c.smooth);
-							}
-							else if (type == BEGIN_GRADIENT_FILL)
-							{
-								var c = data.readBeginGradientFill();
-								fillCommands.beginGradientFill(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
-									c.focalPointRatio);
-								strokeCommands.beginGradientFill(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
-									c.focalPointRatio);
-							}
-							else if (type == BEGIN_SHADER_FILL)
-							{
-								var c = data.readBeginShaderFill();
-								fillCommands.beginShaderFill(c.shaderBuffer);
-								strokeCommands.beginShaderFill(c.shaderBuffer);
-							}
-							else
-							{
-								var c = data.readBeginFill();
-								fillCommands.beginFill(c.color, c.alpha);
-								strokeCommands.beginFill(c.color, c.alpha);
-							}
+						if (hasLineStyle)
+						{
+							strokeCommands.drawRoundRect(c.x, c.y, c.width, c.height, c.ellipseWidth, c.ellipseHeight);
+						}
 
-						case DRAW_CIRCLE:
-							var c = data.readDrawCircle();
-							fillCommands.drawCircle(c.x, c.y, c.radius);
+					case DRAW_QUADS:
+						var c = data.readDrawQuads();
+						fillCommands.drawQuads(c.rects, c.indices, c.transforms);
 
-							if (hasLineStyle)
-							{
-								strokeCommands.drawCircle(c.x, c.y, c.radius);
-							}
+					case DRAW_TRIANGLES:
+						var c = data.readDrawTriangles();
+						fillCommands.drawTriangles(c.vertices, c.indices, c.uvtData, c.culling);
 
-						case DRAW_ELLIPSE:
-							var c = data.readDrawEllipse();
-							fillCommands.drawEllipse(c.x, c.y, c.width, c.height);
+					case OVERRIDE_BLEND_MODE:
+						var c = data.readOverrideBlendMode();
+						renderer.__setBlendModeContext(context, c.blendMode);
 
-							if (hasLineStyle)
-							{
-								strokeCommands.drawEllipse(c.x, c.y, c.width, c.height);
-							}
+					case WINDING_EVEN_ODD:
+						data.readWindingEvenOdd();
+						fillCommands.windingEvenOdd();
+						windingRule = CanvasWindingRule.EVENODD;
 
-						case DRAW_RECT:
-							var c = data.readDrawRect();
-							fillCommands.drawRect(c.x, c.y, c.width, c.height);
+					case WINDING_NON_ZERO:
+						data.readWindingNonZero();
+						fillCommands.windingNonZero();
+						windingRule = CanvasWindingRule.NONZERO;
 
-							if (hasLineStyle)
-							{
-								strokeCommands.drawRect(c.x, c.y, c.width, c.height);
-							}
-
-						case DRAW_ROUND_RECT:
-							var c = data.readDrawRoundRect();
-							fillCommands.drawRoundRect(c.x, c.y, c.width, c.height, c.ellipseWidth, c.ellipseHeight);
-
-							if (hasLineStyle)
-							{
-								strokeCommands.drawRoundRect(c.x, c.y, c.width, c.height, c.ellipseWidth, c.ellipseHeight);
-							}
-
-						case DRAW_QUADS:
-							var c = data.readDrawQuads();
-							fillCommands.drawQuads(c.rects, c.indices, c.transforms);
-
-						case DRAW_TRIANGLES:
-							var c = data.readDrawTriangles();
-							fillCommands.drawTriangles(c.vertices, c.indices, c.uvtData, c.culling);
-
-						case OVERRIDE_BLEND_MODE:
-							var c = data.readOverrideBlendMode();
-							renderer.__setBlendModeContext(context, c.blendMode);
-
-						case WINDING_EVEN_ODD:
-							data.readWindingEvenOdd();
-							fillCommands.windingEvenOdd();
-							windingRule = CanvasWindingRule.EVENODD;
-
-						case WINDING_NON_ZERO:
-							data.readWindingNonZero();
-							fillCommands.windingNonZero();
-							windingRule = CanvasWindingRule.NONZERO;
-
-						default:
-							data.skip(type);
-					}
-				}
-
-				if (fillCommands.length > 0)
-				{
-					endFill();
-				}
-
-				if (strokeCommands.length > 0)
-				{
-					endStroke();
-				}
-
-				data.destroy();
-
-				if (graphics.__bitmap == null)
-				{
-					graphics.__bitmap = BitmapData.fromCanvas(graphics.__canvas);
-				}
-				else if (graphics.__bitmap.width != graphics.__canvas.width || graphics.__bitmap.height != graphics.__canvas.height)
-				{
-					var texture = graphics.__bitmap.__texture;
-					if (texture != null)
-					{
-						texture.dispose();
-					}
-					graphics.__bitmap = BitmapData.fromCanvas(graphics.__canvas);
-				}
-				else
-				{
-					// optimization: if the size of the canvas hasn't changed,
-					// we can re-use the same BitmapData.
-					graphics.__bitmap.image.version++;
+					default:
+						data.skip(type);
 				}
 			}
 
-			graphics.__softwareDirty = false;
-			graphics.__dirty = false;
-			CanvasGraphics.graphics = null;
+			if (fillCommands.length > 0)
+			{
+				endFill();
+			}
+
+			if (strokeCommands.length > 0)
+			{
+				endStroke();
+			}
+
+			data.destroy();
+
+			if (graphics.__bitmap == null)
+			{
+				graphics.__bitmap = BitmapData.fromCanvas(graphics.__canvas);
+			}
+			else if (graphics.__bitmap.width != graphics.__canvas.width || graphics.__bitmap.height != graphics.__canvas.height)
+			{
+				var texture = graphics.__bitmap.__texture;
+				if (texture != null)
+				{
+					texture.dispose();
+				}
+				graphics.__bitmap = BitmapData.fromCanvas(graphics.__canvas);
+			}
+			else
+			{
+				// optimization: if the size of the canvas hasn't changed,
+				// we can re-use the same BitmapData.
+				graphics.__bitmap.image.version++;
+			}
 		}
+
+		graphics.__softwareDirty = false;
+		graphics.__dirty = false;
+		CanvasGraphics.graphics = null;
 		#end
 	}
 

@@ -1841,6 +1841,14 @@ class CairoGraphics
 		var pixelRatio = renderer.__pixelRatio;
 		#end
 
+		graphics.__update(renderer.__worldTransform, pixelRatio);
+
+		if (!graphics.__softwareDirty || graphics.__managed)
+		{
+			CairoGraphics.graphics = null;
+			return;
+		}
+
 		var scale9Grid:Rectangle = graphics.__owner.__scale9Grid;
 		#if (openfl_legacy_scale9grid && !cairo)
 		var hasScale9Grid:Bool = false;
@@ -1858,14 +1866,6 @@ class CairoGraphics
 		{
 			graphics.__bitmapScaleX = 1;
 			graphics.__bitmapScaleY = 1;
-		}
-
-		graphics.__update(renderer.__worldTransform, pixelRatio);
-
-		if (!graphics.__softwareDirty || graphics.__managed)
-		{
-			CairoGraphics.graphics = null;
-			return;
 		}
 
 		bounds = graphics.__bounds;
