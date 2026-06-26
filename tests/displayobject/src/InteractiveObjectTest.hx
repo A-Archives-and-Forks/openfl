@@ -6,6 +6,7 @@ import openfl.display.InteractiveObject;
 import openfl.display.Sprite;
 import openfl.errors.RangeError;
 import openfl.events.Event;
+import openfl.events.EventPhase;
 import openfl.events.MouseEvent;
 import openfl.events.TouchEvent;
 import openfl.geom.Rectangle;
@@ -203,22 +204,41 @@ class InteractiveObjectTest extends Test
 		// ensure that __transformDirty flag is cleared
 		@:privateAccess Lib.current.stage.__renderAfterEvent();
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_mouseOverHandler(event:MouseEvent):Void
 		{
 			Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverHandler);
+		function libCurrent_mouseOverCaptureHandler(event:MouseEvent):Void
+		{
+			Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_OVER, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.isFalse(event.buttonDown);
@@ -236,10 +256,11 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverHandler);
+		Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -268,22 +289,41 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_mouseOutHandler(event:MouseEvent):Void
 		{
 			Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutHandler);
+		function libCurrent_mouseOutCaptureHandler(event:MouseEvent):Void
+		{
+			Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.isFalse(event.buttonDown);
@@ -301,10 +341,11 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutHandler);
+		Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -333,10 +374,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -357,7 +398,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 	}
 
 	public function test_mouseOutEventOnSetInvisible()
@@ -385,10 +426,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -409,7 +450,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -439,10 +480,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -463,7 +504,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -493,10 +534,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -517,7 +558,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -547,10 +588,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -571,7 +612,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -601,10 +642,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -625,7 +666,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -658,10 +699,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -682,7 +723,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -715,10 +756,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -739,7 +780,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 	}
 
 	public function test_mouseOutEventOnSetParentMouseChildrenDisabled()
@@ -770,10 +811,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -793,7 +834,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -826,10 +867,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -849,7 +890,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -882,10 +923,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -905,7 +946,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -938,10 +979,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isTrue(event.bubbles);
@@ -961,7 +1002,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -987,22 +1028,41 @@ class InteractiveObjectTest extends Test
 		// ensure that __transformDirty flag is cleared
 		@:privateAccess Lib.current.stage.__renderAfterEvent();
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_mouseDownHandler(event:MouseEvent):Void
 		{
 			Lib.current.removeEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownHandler);
+		function libCurrent_mouseDownCaptureHandler(event:MouseEvent):Void
+		{
+			Lib.current.removeEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_DOWN, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.isTrue(event.buttonDown);
@@ -1020,10 +1080,12 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownHandler);
+		Lib.current.removeEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -1052,22 +1114,41 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_mouseUpHandler(event:MouseEvent):Void
 		{
 			Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpHandler);
+		function libCurrent_mouseUpCaptureHandler(event:MouseEvent):Void
+		{
+			Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_UP, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.isFalse(event.buttonDown);
@@ -1085,10 +1166,11 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpHandler);
+		Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -1113,22 +1195,41 @@ class InteractiveObjectTest extends Test
 		// ensure that __transformDirty flag is cleared
 		@:privateAccess Lib.current.stage.__renderAfterEvent();
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_mouseMoveHandler(event:MouseEvent):Void
 		{
 			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
+		function libCurrent_mouseMoveCaptureHandler(event:MouseEvent):Void
+		{
+			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_MOVE, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.isFalse(event.buttonDown);
@@ -1146,10 +1247,11 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
+		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -1178,22 +1280,41 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_mouseMoveHandler(event:MouseEvent):Void
 		{
 			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
+		function libCurrent_mouseMoveCaptureHandler(event:MouseEvent):Void
+		{
+			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_MOVE, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.isTrue(event.buttonDown);
@@ -1211,7 +1332,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		stage.window.onMouseUp.dispatch(25.0, 36.0, 0);
@@ -1219,6 +1340,7 @@ class InteractiveObjectTest extends Test
 		stage.application.onUpdate.dispatch(0);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
+		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -1243,10 +1365,10 @@ class InteractiveObjectTest extends Test
 		// ensure that __transformDirty flag is cleared
 		@:privateAccess Lib.current.stage.__renderAfterEvent();
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OVER, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1266,7 +1388,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -1296,10 +1418,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1319,7 +1441,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -1349,10 +1471,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1373,7 +1495,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 	}
 
 	public function test_rollOutEventOnSetInvisible()
@@ -1401,10 +1523,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1425,7 +1547,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -1455,10 +1577,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1479,7 +1601,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -1509,10 +1631,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1533,7 +1655,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -1563,10 +1685,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1587,7 +1709,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -1617,10 +1739,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1641,7 +1763,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		sprite.parent.removeChild(sprite);
 	}
@@ -1674,10 +1796,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1698,7 +1820,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -1731,10 +1853,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1755,7 +1877,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 	}
 
 	public function test_rollOutEventOnSetParentMouseChildrenDisabled()
@@ -1792,10 +1914,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1815,7 +1937,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isFalse(dispatchedForParent);
 
 		spriteParent.parent.removeChild(spriteParent);
@@ -1849,10 +1971,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1872,7 +1994,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -1905,10 +2027,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1928,7 +2050,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -1961,10 +2083,10 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var dispatchedToTarget = false;
 		sprite.addEventListener(MouseEvent.ROLL_OUT, function(event:MouseEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
 			Assert.isFalse(event.bubbles);
@@ -1984,7 +2106,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 
 		spriteParent.parent.removeChild(spriteParent);
 	}
@@ -2055,22 +2177,41 @@ class InteractiveObjectTest extends Test
 		// ensure that __transformDirty flag is cleared
 		@:privateAccess Lib.current.stage.__renderAfterEvent();
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_touchBeginHandler(event:TouchEvent):Void
 		{
 			Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginHandler);
+		function libCurrent_touchBeginCaptureHandler(event:TouchEvent):Void
+		{
+			Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginCaptureHandler, true);
 		sprite.addEventListener(TouchEvent.TOUCH_BEGIN, function(event:TouchEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.equals(0, event.touchPointID);
@@ -2091,10 +2232,11 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginHandler);
+		Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -2128,22 +2270,41 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_touchEndHandler(event:TouchEvent):Void
 		{
 			Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndHandler);
+		function libCurrent_touchEndCaptureHandler(event:TouchEvent):Void
+		{
+			Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndCaptureHandler, true);
 		sprite.addEventListener(TouchEvent.TOUCH_END, function(event:TouchEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.equals(0, event.touchPointID);
@@ -2160,10 +2321,11 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndHandler);
+		Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 
@@ -2197,22 +2359,41 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		var dispatched = false;
+		var captured = false;
+		var dispatchedToTarget = false;
 		var bubbled = false;
 		function libCurrent_touchMoveHandler(event:TouchEvent):Void
 		{
 			Lib.current.removeEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveHandler);
 			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
 			Assert.notEquals(sprite, Lib.current);
 			Assert.equals(sprite, event.target);
 			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
 		}
 		Lib.current.addEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveHandler);
+		function libCurrent_touchMoveCaptureHandler(event:TouchEvent):Void
+		{
+			Lib.current.removeEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveCaptureHandler, true);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(sprite, Lib.current);
+			Assert.equals(sprite, event.target);
+			Assert.equals(Lib.current, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}
+		Lib.current.addEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveCaptureHandler, true);
 		sprite.addEventListener(TouchEvent.TOUCH_MOVE, function(event:TouchEvent):Void
 		{
-			dispatched = true;
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
 			Assert.equals(sprite, event.target);
 			Assert.equals(sprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 			Assert.isTrue(event.bubbles);
 			Assert.isFalse(event.cancelable);
 			Assert.equals(0, event.touchPointID);
@@ -2230,7 +2411,7 @@ class InteractiveObjectTest extends Test
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
 
-		Assert.isTrue(dispatched);
+		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
 
 		Touch.onEnd.dispatch(__touch);
@@ -2238,6 +2419,7 @@ class InteractiveObjectTest extends Test
 		stage.application.onUpdate.dispatch(0);
 
 		Lib.current.removeEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveHandler);
+		Lib.current.removeEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveCaptureHandler, true);
 		sprite.parent.removeChild(sprite);
 	}
 	#end
