@@ -209,7 +209,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_mouseOverHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -221,7 +221,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverHandler);
 		function libCurrent_mouseOverCaptureHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -233,6 +233,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_OVER, function(event:MouseEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -258,6 +259,7 @@ class InteractiveObjectTest extends Test
 
 		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverHandler);
 		Lib.current.removeEventListener(MouseEvent.MOUSE_OVER, libCurrent_mouseOverCaptureHandler, true);
@@ -294,7 +296,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_mouseOutHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -306,7 +308,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutHandler);
 		function libCurrent_mouseOutCaptureHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -318,6 +320,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_OUT, function(event:MouseEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -343,6 +346,7 @@ class InteractiveObjectTest extends Test
 
 		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutHandler);
 		Lib.current.removeEventListener(MouseEvent.MOUSE_OUT, libCurrent_mouseOutCaptureHandler, true);
@@ -1033,7 +1037,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_mouseDownHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -1045,7 +1049,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownHandler);
 		function libCurrent_mouseDownCaptureHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -1057,6 +1061,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_DOWN, libCurrent_mouseDownCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_DOWN, function(event:MouseEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -1119,7 +1124,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_mouseUpHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -1131,7 +1136,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpHandler);
 		function libCurrent_mouseUpCaptureHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -1143,6 +1148,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_UP, function(event:MouseEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -1168,6 +1174,7 @@ class InteractiveObjectTest extends Test
 
 		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpHandler);
 		Lib.current.removeEventListener(MouseEvent.MOUSE_UP, libCurrent_mouseUpCaptureHandler, true);
@@ -1200,7 +1207,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_mouseMoveHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -1212,7 +1219,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
 		function libCurrent_mouseMoveCaptureHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -1224,6 +1231,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_MOVE, function(event:MouseEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -1249,6 +1257,7 @@ class InteractiveObjectTest extends Test
 
 		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
 		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
@@ -1285,7 +1294,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_mouseMoveHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -1297,7 +1306,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
 		function libCurrent_mouseMoveCaptureHandler(event:MouseEvent):Void
 		{
-			Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -1309,6 +1318,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
 		sprite.addEventListener(MouseEvent.MOUSE_MOVE, function(event:MouseEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -1338,6 +1348,10 @@ class InteractiveObjectTest extends Test
 		stage.window.onMouseUp.dispatch(25.0, 36.0, 0);
 		// ensure that pending mouse events are dispatched
 		stage.application.onUpdate.dispatch(0);
+
+		Assert.isTrue(dispatchedToTarget);
+		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveHandler);
 		Lib.current.removeEventListener(MouseEvent.MOUSE_MOVE, libCurrent_mouseMoveCaptureHandler, true);
@@ -2182,7 +2196,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_touchBeginHandler(event:TouchEvent):Void
 		{
-			Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -2194,7 +2208,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginHandler);
 		function libCurrent_touchBeginCaptureHandler(event:TouchEvent):Void
 		{
-			Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -2206,6 +2220,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginCaptureHandler, true);
 		sprite.addEventListener(TouchEvent.TOUCH_BEGIN, function(event:TouchEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -2234,6 +2249,7 @@ class InteractiveObjectTest extends Test
 
 		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginHandler);
 		Lib.current.removeEventListener(TouchEvent.TOUCH_BEGIN, libCurrent_touchBeginCaptureHandler, true);
@@ -2275,7 +2291,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_touchEndHandler(event:TouchEvent):Void
 		{
-			Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -2288,6 +2304,7 @@ class InteractiveObjectTest extends Test
 		function libCurrent_touchEndCaptureHandler(event:TouchEvent):Void
 		{
 			Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -2299,6 +2316,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndCaptureHandler, true);
 		sprite.addEventListener(TouchEvent.TOUCH_END, function(event:TouchEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -2323,6 +2341,7 @@ class InteractiveObjectTest extends Test
 
 		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndHandler);
 		Lib.current.removeEventListener(TouchEvent.TOUCH_END, libCurrent_touchEndCaptureHandler, true);
@@ -2364,7 +2383,7 @@ class InteractiveObjectTest extends Test
 		var bubbled = false;
 		function libCurrent_touchMoveHandler(event:TouchEvent):Void
 		{
-			Lib.current.removeEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveHandler);
+			Assert.isFalse(bubbled);
 			bubbled = true;
 			Assert.isTrue(captured);
 			Assert.isTrue(dispatchedToTarget);
@@ -2377,6 +2396,7 @@ class InteractiveObjectTest extends Test
 		function libCurrent_touchMoveCaptureHandler(event:TouchEvent):Void
 		{
 			Lib.current.removeEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.isFalse(bubbled);
@@ -2388,6 +2408,7 @@ class InteractiveObjectTest extends Test
 		Lib.current.addEventListener(TouchEvent.TOUCH_MOVE, libCurrent_touchMoveCaptureHandler, true);
 		sprite.addEventListener(TouchEvent.TOUCH_MOVE, function(event:TouchEvent):Void
 		{
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.isFalse(bubbled);
@@ -2413,6 +2434,7 @@ class InteractiveObjectTest extends Test
 
 		Assert.isTrue(dispatchedToTarget);
 		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
 
 		Touch.onEnd.dispatch(__touch);
 		// ensure that pending mouse events are dispatched

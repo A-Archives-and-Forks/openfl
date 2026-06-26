@@ -267,7 +267,7 @@ class StageTest extends Test
 		var dispatchedToTarget = false;
 		function stage_mouseDownHandler(event:MouseEvent):Void
 		{
-			stage.removeEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownHandler);
+			Assert.isFalse(dispatchedToTarget);
 			dispatchedToTarget = true;
 			Assert.isTrue(captured);
 			Assert.equals(stage, event.target);
@@ -277,7 +277,7 @@ class StageTest extends Test
 		stage.addEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownHandler);
 		function stage_mouseDownCaptureHandler(event:MouseEvent):Void
 		{
-			stage.removeEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownCaptureHandler, true);
+			Assert.isFalse(captured);
 			captured = true;
 			Assert.isFalse(dispatchedToTarget);
 			Assert.equals(stage, event.target);
