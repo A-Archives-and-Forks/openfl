@@ -269,7 +269,7 @@ class EventDispatcherTest extends Test
 
 	public function test_dispatchEventWithCancelableEventAndPreventDefaultCall()
 	{
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
 		dispatcher.addEventListener(eventType, event ->
@@ -298,7 +298,7 @@ class EventDispatcherTest extends Test
 
 	public function test_dispatchEventWithCancelableEventAndNoPreventDefaultCall()
 	{
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
 		dispatcher.addEventListener(eventType, event ->
@@ -325,7 +325,7 @@ class EventDispatcherTest extends Test
 
 	public function test_dispatchEventWithStopPropagation()
 	{
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var calledListener1 = false;
 		var calledListener2 = false;
@@ -362,7 +362,7 @@ class EventDispatcherTest extends Test
 
 	public function test_dispatchEventWithStopImmediatePropagation()
 	{
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var calledListener1 = false;
 		var calledListener2 = false;
@@ -393,7 +393,7 @@ class EventDispatcherTest extends Test
 
 	public function test_dispatchEventWithPreventDefaultAndStopPropagation()
 	{
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
 		dispatcher.addEventListener(eventType, event ->
@@ -412,7 +412,7 @@ class EventDispatcherTest extends Test
 
 	public function test_dispatchEventWithPreventDefaultAndStopImmediatePropagation()
 	{
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
 		dispatcher.addEventListener(eventType, event ->

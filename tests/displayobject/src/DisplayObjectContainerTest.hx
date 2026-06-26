@@ -572,7 +572,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured = false;
 		var dispatchedToTarget = false;
@@ -642,7 +642,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured = false;
 		var dispatchedToTarget = false;
@@ -712,7 +712,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		parentSprite.addEventListener(eventType, function(event:Event):Void
 		{
@@ -771,7 +771,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		parentSprite.addEventListener(eventType, function(event:Event):Void
 		{
@@ -829,7 +829,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured = false;
 		var bubbled = false;
@@ -917,7 +917,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured1 = false;
 		var captured2 = false;
@@ -1003,7 +1003,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured = false;
 		var bubbled1 = false;
@@ -1093,7 +1093,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured = false;
 		var bubbled = false;
@@ -1175,7 +1175,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured1 = false;
 		var captured2 = false;
@@ -1254,7 +1254,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		var captured = false;
 		var bubbled1 = false;
@@ -1338,7 +1338,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		childSprite.addEventListener(eventType, function(event:Event):Void
 		{
@@ -1377,7 +1377,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		parentSprite.addEventListener(eventType, function(event:Event):Void
 		{
@@ -1416,7 +1416,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		parentSprite.addEventListener(eventType, function(event:Event):Void
 		{
@@ -1455,7 +1455,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		childSprite.addEventListener(eventType, function(event:Event):Void
 		{
@@ -1494,7 +1494,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		parentSprite.addEventListener(eventType, function(event:Event):Void
 		{
@@ -1533,7 +1533,7 @@ class DisplayObjectContainerTest extends Test
 		childSprite.graphics.endFill();
 		parentSprite.addChild(childSprite);
 
-		final eventType = "myCustomEvent";
+		var eventType = "myCustomEvent";
 
 		parentSprite.addEventListener(eventType, function(event:Event):Void
 		{
