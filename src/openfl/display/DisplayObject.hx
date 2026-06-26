@@ -1570,6 +1570,11 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 
 				__tempStack.release(stack);
 			}
+
+			if (event.__isCanceled)
+			{
+				return true;
+			}
 		}
 
 		event.eventPhase = AT_TARGET;
