@@ -3252,7 +3252,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 			var dropTarget:DisplayObject = null;
 
-			if (__mouseOverTarget == __dragObject)
+			if (__dragObject.contains(__mouseOverTarget))
 			{
 				var cacheMouseEnabled = __dragObject.mouseEnabled;
 				var cacheMouseChildren = __dragObject.mouseChildren;
