@@ -1,5 +1,6 @@
 package;
 
+import openfl.Lib;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.DisplayObject;
@@ -7,6 +8,7 @@ import openfl.display.DisplayObjectContainer;
 import openfl.display.Sprite;
 import openfl.errors.RangeError;
 import openfl.events.Event;
+import openfl.events.EventPhase;
 import openfl.geom.Point;
 import utest.Assert;
 import utest.Test;
@@ -547,5 +549,145 @@ class DisplayObjectContainerTest extends Test
 		Assert.equals(0, bounds.y);
 		Assert.equals(150, bounds.width);
 		Assert.equals(0, bounds.height);
+	}
+
+	public function test_dispatchEventPhasesWithBubbling()
+	{
+		if (Lib.current == null || Lib.current.stage == null)
+		{
+			Assert.pass("Skipping dispatch event phases with bubbling test");
+			return;
+		}
+
+		var stage = Lib.current.stage;
+
+		var parentSprite = new Sprite();
+		parentSprite.x = 20.0;
+		parentSprite.y = 30.0;
+		Lib.current.addChild(parentSprite);
+
+		var childSprite = new Sprite();
+		childSprite.graphics.beginFill(0xff0000);
+		childSprite.graphics.drawRect(0.0, 0.0, 100.0, 50.0);
+		childSprite.graphics.endFill();
+		parentSprite.addChild(childSprite);
+
+		final eventType = "myCustomEvent";
+
+		var captured = false;
+		var dispatchedToTarget = false;
+		var bubbled = false;
+		parentSprite.addEventListener(eventType, function(event:Event):Void
+		{
+			Assert.isFalse(bubbled);
+			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
+			Assert.notEquals(childSprite, parentSprite);
+			Assert.equals(childSprite, event.target);
+			Assert.equals(parentSprite, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
+		});
+		parentSprite.addEventListener(eventType, function(event:Event):Void
+		{
+			Assert.isFalse(captured);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(childSprite, parentSprite);
+			Assert.equals(childSprite, event.target);
+			Assert.equals(parentSprite, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}, true);
+		childSprite.addEventListener(eventType, function(event:Event):Void
+		{
+			Assert.isFalse(dispatchedToTarget);
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
+			Assert.equals(childSprite, event.target);
+			Assert.equals(childSprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
+			Assert.isTrue(event.bubbles);
+			Assert.isFalse(event.cancelable);
+		});
+
+		childSprite.dispatchEvent(new Event(eventType, true, false));
+
+		Assert.isTrue(dispatchedToTarget);
+		Assert.isTrue(bubbled);
+		Assert.isTrue(captured);
+
+		parentSprite.parent.removeChild(parentSprite);
+	}
+
+	public function test_dispatchEventPhasesWithoutBubbling()
+	{
+		if (Lib.current == null || Lib.current.stage == null)
+		{
+			Assert.pass("Skipping dispatch event phases without bubbling test");
+			return;
+		}
+
+		var stage = Lib.current.stage;
+
+		var parentSprite = new Sprite();
+		parentSprite.x = 20.0;
+		parentSprite.y = 30.0;
+		Lib.current.addChild(parentSprite);
+
+		var childSprite = new Sprite();
+		childSprite.graphics.beginFill(0xff0000);
+		childSprite.graphics.drawRect(0.0, 0.0, 100.0, 50.0);
+		childSprite.graphics.endFill();
+		parentSprite.addChild(childSprite);
+
+		final eventType = "myCustomEvent";
+
+		var captured = false;
+		var dispatchedToTarget = false;
+		var bubbled = false;
+		parentSprite.addEventListener(eventType, function(event:Event):Void
+		{
+			Assert.isFalse(bubbled);
+			bubbled = true;
+			Assert.isTrue(captured);
+			Assert.isTrue(dispatchedToTarget);
+			Assert.notEquals(childSprite, parentSprite);
+			Assert.equals(childSprite, event.target);
+			Assert.equals(parentSprite, event.currentTarget);
+			Assert.equals(EventPhase.BUBBLING_PHASE, event.eventPhase);
+		});
+		parentSprite.addEventListener(eventType, function(event:Event):Void
+		{
+			Assert.isFalse(captured);
+			captured = true;
+			Assert.isFalse(dispatchedToTarget);
+			Assert.isFalse(bubbled);
+			Assert.notEquals(childSprite, parentSprite);
+			Assert.equals(childSprite, event.target);
+			Assert.equals(parentSprite, event.currentTarget);
+			Assert.equals(EventPhase.CAPTURING_PHASE, event.eventPhase);
+		}, true);
+		childSprite.addEventListener(eventType, function(event:Event):Void
+		{
+			Assert.isFalse(dispatchedToTarget);
+			dispatchedToTarget = true;
+			Assert.isTrue(captured);
+			Assert.isFalse(bubbled);
+			Assert.equals(childSprite, event.target);
+			Assert.equals(childSprite, event.currentTarget);
+			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
+			Assert.isFalse(event.bubbles);
+			Assert.isFalse(event.cancelable);
+		});
+
+		childSprite.dispatchEvent(new Event(eventType, false, false));
+
+		Assert.isTrue(dispatchedToTarget);
+		Assert.isFalse(bubbled);
+		Assert.isTrue(captured);
+
+		parentSprite.parent.removeChild(parentSprite);
 	}
 }
