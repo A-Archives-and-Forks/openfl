@@ -272,7 +272,7 @@ class EventDispatcherTest extends Test
 		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called first in the AT_TARGET because it was added first.
@@ -281,7 +281,7 @@ class EventDispatcherTest extends Test
 			Assert.isTrue(event.isDefaultPrevented());
 			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 		});
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called second in the AT_TARGET because it was added second.
@@ -301,14 +301,14 @@ class EventDispatcherTest extends Test
 		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called first in the AT_TARGET because it was added first.
 			Assert.isFalse(event.isDefaultPrevented());
 			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 		});
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called second in the AT_TARGET because it was added second.
@@ -330,7 +330,7 @@ class EventDispatcherTest extends Test
 		var calledListener1 = false;
 		var calledListener2 = false;
 		var dispatcher = new EventDispatcher();
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called first in the AT_TARGET because it was added first.
@@ -340,7 +340,7 @@ class EventDispatcherTest extends Test
 			event.stopPropagation();
 			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 		});
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// stopPropagation() does not stop the current phase, so this
 			// listener will be called.
@@ -367,7 +367,7 @@ class EventDispatcherTest extends Test
 		var calledListener1 = false;
 		var calledListener2 = false;
 		var dispatcher = new EventDispatcher();
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called first in the AT_TARGET because it was added first.
@@ -377,7 +377,7 @@ class EventDispatcherTest extends Test
 			event.stopImmediatePropagation();
 			Assert.equals(EventPhase.AT_TARGET, event.eventPhase);
 		});
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// stopImmediatePropagation() prevents this listener from being called
 			Assert.fail();
@@ -396,7 +396,7 @@ class EventDispatcherTest extends Test
 		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called first in the AT_TARGET because it was added first.
@@ -415,7 +415,7 @@ class EventDispatcherTest extends Test
 		var eventType = "myCustomEvent";
 
 		var dispatcher = new EventDispatcher();
-		dispatcher.addEventListener(eventType, event ->
+		dispatcher.addEventListener(eventType, function(event:Event):Void
 		{
 			// listeners without priority are called in order, so this listener
 			// is called first in the AT_TARGET because it was added first.
