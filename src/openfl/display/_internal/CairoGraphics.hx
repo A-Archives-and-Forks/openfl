@@ -1001,6 +1001,12 @@ class CairoGraphics
 					positionX = c.x + c.radius;
 					positionY = c.y;
 
+					// treat the position after drawCircle() similarly to
+					// when moveTo() is called: it's the start of a new shape!
+					startX = positionX;
+					startY = positionY;
+					setStart = true;
+
 				case DRAW_ELLIPSE:
 					var c = data.readDrawEllipse();
 					hasPath = true;
@@ -1011,6 +1017,12 @@ class CairoGraphics
 					positionX = c.x + c.width;
 					positionY = c.y + c.height / 2;
 
+					// treat the position after drawEllipse() similarly to
+					// when moveTo() is called: it's the start of a new shape!
+					startX = positionX;
+					startY = positionY;
+					setStart = true;
+
 				case DRAW_ROUND_RECT:
 					var c = data.readDrawRoundRect();
 					hasPath = true;
@@ -1020,6 +1032,12 @@ class CairoGraphics
 					// bottom-right corner of the rectangle, above the radius
 					positionX = c.x + c.width;
 					positionY = c.y + c.height - c.ellipseHeight;
+
+					// treat the position after drawRoundRect() similarly to
+					// when moveTo() is called: it's the start of a new shape!
+					startX = positionX;
+					startY = positionY;
+					setStart = true;
 
 				case LINE_TO:
 					var c = data.readLineTo();
@@ -1741,6 +1759,12 @@ class CairoGraphics
 					// top-left corner of the rectangle
 					positionX = c.x;
 					positionY = c.y;
+
+					// treat the position after drawRect() similarly to
+					// when moveTo() is called: it's the start of a new shape!
+					startX = positionX;
+					startY = positionY;
+					setStart = true;
 
 				case WINDING_EVEN_ODD:
 					data.readWindingEvenOdd();
