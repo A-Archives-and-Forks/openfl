@@ -433,6 +433,10 @@ class CanvasGraphics
 		#end
 	}
 
+	/**
+		Draws a rounded rectangle that starts and stops at the bottom-right
+		corner, just above the ellipse height.
+	**/
 	private static function drawRoundRect(x:Float, y:Float, width:Float, height:Float, ellipseWidth:Float, ellipseHeight:Null<Float>, ?scale9Grid:Rectangle,
 			?scale9UnscaledWidth:Float, ?scale9UnscaledHeight:Float, ?scaleX:Float, ?scaleY:Float):Void
 	{
@@ -444,50 +448,66 @@ class CanvasGraphics
 
 		if (ellipseWidth > width / 2) ellipseWidth = width / 2;
 		if (ellipseHeight > height / 2) ellipseHeight = height / 2;
+
+		var xe = x + width,
+			ye = y + height,
+			cx1 = -ellipseWidth + (ellipseWidth * SIN45),
+			cx2 = -ellipseWidth + (ellipseWidth * TAN22),
+			cy1 = -ellipseHeight + (ellipseHeight * SIN45),
+			cy2 = -ellipseHeight + (ellipseHeight * TAN22);
+
 		if (scale9Grid != null)
 		{
-			var scaledLeft = toScale9Position(x, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
-			var scaledTop = toScale9Position(y, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
-			var scaledRight = toScale9Position(x + width, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
-			var scaledBottom = toScale9Position(y + height, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledX = toScale9Position(x, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledY = toScale9Position(y, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+
+			var scaledXe = toScale9Position(xe, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYe = toScale9Position(ye, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+
+			var scaledXeMinusEw = toScale9Position(xe - ellipseWidth, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYeMinusEh = toScale9Position(ye - ellipseHeight, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+
+			var scaledXePlusCx1 = toScale9Position(xe + cx1, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYePlusCy1 = toScale9Position(ye + cy1, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXePlusCx2 = toScale9Position(xe + cx2, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYePlusCy2 = toScale9Position(ye + cy2, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+
+			var scaledXPlusEw = toScale9Position(x + ellipseWidth, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYPlusEh = toScale9Position(y + ellipseHeight, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+
+			var scaledXMinusCx1 = toScale9Position(x - cx1, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYMinusCy1 = toScale9Position(y - cy1, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXMinusCx2 = toScale9Position(x - cx2, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYMinusCy2 = toScale9Position(y - cy2, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
 
 			if ((fillScale9Bounds != null && bitmapFill != null) || (strokeScale9Bounds != null && bitmapStroke != null))
 			{
 				applyScale9GridUnscaledX(x);
 				applyScale9GridUnscaledY(y);
-				applyScale9GridUnscaledX(x + width);
-				applyScale9GridUnscaledY(y + height);
-				applyScale9GridScaledX(scaledLeft);
-				applyScale9GridScaledY(scaledTop);
-				applyScale9GridScaledX(scaledRight);
-				applyScale9GridScaledY(scaledBottom);
+				applyScale9GridUnscaledX(xe);
+				applyScale9GridUnscaledY(ye);
+				applyScale9GridScaledX(scaledX);
+				applyScale9GridScaledY(scaledY);
+				applyScale9GridScaledX(scaledXe);
+				applyScale9GridScaledY(scaledYe);
 			}
 
-			var scaledLeftX = toScale9Position(x + ellipseWidth, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
-			var scaledTopY = toScale9Position(y + ellipseHeight, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
-
-			var scaledRightX = toScale9Position(x + width - ellipseWidth, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
-			var scaledBottomY = toScale9Position(y + height - ellipseHeight, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
-
-			context.moveTo(scaledLeftX, scaledTop);
-			context.lineTo(scaledRightX, scaledTop);
-			context.quadraticCurveTo(scaledRight, scaledTop, scaledRight, scaledTopY);
-			context.lineTo(scaledRight, scaledBottomY);
-			context.quadraticCurveTo(scaledRight, scaledBottom, scaledRightX, scaledBottom);
-			context.lineTo(scaledLeftX, scaledBottom);
-			context.quadraticCurveTo(scaledLeft, scaledBottom, scaledLeft, scaledBottomY);
-			context.lineTo(scaledLeft, scaledTopY);
-			context.quadraticCurveTo(scaledLeft, scaledTop, scaledLeftX, scaledTop);
+			context.moveTo(scaledXe, scaledYeMinusEh);
+			context.quadraticCurveTo(scaledXe, scaledYePlusCy2, scaledXePlusCx1, scaledYePlusCy1);
+			context.quadraticCurveTo(scaledXePlusCx2, scaledYe, scaledXeMinusEw, scaledYe);
+			context.lineTo(scaledXPlusEw, scaledYe);
+			context.quadraticCurveTo(scaledXMinusCx2, scaledYe, scaledXMinusCx1, scaledYePlusCy1);
+			context.quadraticCurveTo(scaledX, scaledYePlusCy2, scaledX, scaledYeMinusEh);
+			context.lineTo(scaledX, scaledYPlusEh);
+			context.quadraticCurveTo(scaledX, scaledYMinusCy2, scaledXMinusCx1, scaledYMinusCy1);
+			context.quadraticCurveTo(scaledXMinusCx2, scaledY, scaledXPlusEw, scaledY);
+			context.lineTo(scaledXeMinusEw, scaledY);
+			context.quadraticCurveTo(scaledXePlusCx2, scaledY, scaledXePlusCx1, scaledYMinusCy1);
+			context.quadraticCurveTo(scaledXe, scaledYMinusCy2, scaledXe, scaledYPlusEh);
+			context.lineTo(scaledXe, scaledYeMinusEh);
 		}
 		else
 		{
-			var xe = x + width,
-				ye = y + height,
-				cx1 = -ellipseWidth + (ellipseWidth * SIN45),
-				cx2 = -ellipseWidth + (ellipseWidth * TAN22),
-				cy1 = -ellipseHeight + (ellipseHeight * SIN45),
-				cy2 = -ellipseHeight + (ellipseHeight * TAN22);
-
 			context.moveTo(xe, ye - ellipseHeight);
 			context.quadraticCurveTo(xe, ye + cy2, xe + cx1, ye + cy1);
 			context.quadraticCurveTo(xe + cx2, ye, xe - ellipseWidth, ye);
