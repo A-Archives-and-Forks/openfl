@@ -510,7 +510,6 @@ class CanvasGraphics
 		#if (js && html5)
 		context.beginPath();
 		playCommands(fillCommands, false);
-		fillCommands.clear();
 		#end
 	}
 
@@ -520,7 +519,6 @@ class CanvasGraphics
 		context.beginPath();
 		playCommands(strokeCommands, true);
 		context.closePath();
-		strokeCommands.clear();
 		#end
 	}
 
@@ -990,9 +988,6 @@ class CanvasGraphics
 							scaledAnchorX
 							- offsetX, scaledAnchorY
 							- offsetY);
-
-						positionX = scaledAnchorX;
-						positionY = scaledAnchorY;
 					}
 					else
 					{
@@ -1004,10 +999,10 @@ class CanvasGraphics
 							- offsetX,
 							c.anchorY
 							- offsetY);
-
-						positionX = c.anchorX;
-						positionY = c.anchorY;
 					}
+
+					positionX = c.anchorX;
+					positionY = c.anchorY;
 
 				case CURVE_TO:
 					var c = data.readCurveTo();
@@ -1029,17 +1024,14 @@ class CanvasGraphics
 						}
 
 						context.quadraticCurveTo(scaledControlX - offsetX, scaledControlY - offsetY, scaledAnchorX - offsetX, scaledAnchorY - offsetY);
-
-						positionX = scaledAnchorX;
-						positionY = scaledAnchorY;
 					}
 					else
 					{
 						context.quadraticCurveTo(c.controlX - offsetX, c.controlY - offsetY, c.anchorX - offsetX, c.anchorY - offsetY);
-
-						positionX = c.anchorX;
-						positionY = c.anchorY;
 					}
+
+					positionX = c.anchorX;
+					positionY = c.anchorY;
 
 				case DRAW_CIRCLE:
 					var c = data.readDrawCircle();
@@ -1091,6 +1083,10 @@ class CanvasGraphics
 						context.moveTo(c.x - offsetX + c.radius, c.y - offsetY);
 						context.arc(c.x - offsetX, c.y - offsetY, c.radius, 0, Math.PI * 2, true);
 					}
+
+					// the right-most point of the circle, centered vertically
+					positionX = c.x + c.radius;
+					positionY = c.y;
 
 				case DRAW_ELLIPSE:
 					var c = data.readDrawEllipse();
@@ -1151,11 +1147,19 @@ class CanvasGraphics
 						context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
 					}
 
+					// the right-most point of the ellipse, centered vertically
+					positionX = c.x + c.width;
+					positionY = c.y + c.height / 2;
+
 				case DRAW_ROUND_RECT:
 					var c = data.readDrawRoundRect();
 					hasPath = true;
 					drawRoundRect(c.x - offsetX, c.y - offsetY, c.width, c.height, c.ellipseWidth, c.ellipseHeight, scale9Grid, bounds.width, bounds.height,
 						graphics.__owner.scaleX, graphics.__owner.scaleY);
+
+					// bottom-right corner of the rectangle, above the radius
+					positionX = c.x + c.width;
+					positionY = c.y + c.height - c.ellipseHeight;
 
 				case LINE_TO:
 					var c = data.readLineTo();
@@ -1174,13 +1178,10 @@ class CanvasGraphics
 							applyScale9GridScaledY(scaledY);
 						}
 
-						if (positionX != scaledX || positionY != scaledY)
+						if (positionX != c.x || positionY != c.y)
 						{
 							context.lineTo(scaledX - offsetX, scaledY - offsetY);
 						}
-
-						positionX = scaledX;
-						positionY = scaledY;
 					}
 					else
 					{
@@ -1190,10 +1191,10 @@ class CanvasGraphics
 							// position is equal to the new position
 							context.lineTo(c.x - offsetX, c.y - offsetY);
 						}
-
-						positionX = c.x;
-						positionY = c.y;
 					}
+
+					positionX = c.x;
+					positionY = c.y;
 
 					if (positionX == startX && positionY == startY)
 					{
@@ -1217,17 +1218,14 @@ class CanvasGraphics
 						}
 
 						context.moveTo(scaledX - offsetX, scaledY - offsetY);
-
-						positionX = scaledX;
-						positionY = scaledY;
 					}
 					else
 					{
 						context.moveTo(c.x - offsetX, c.y - offsetY);
-
-						positionX = c.x;
-						positionY = c.y;
 					}
+
+					positionX = c.x;
+					positionY = c.y;
 
 					if (setStart && positionX != startX && positionY != startY)
 					{
@@ -1245,7 +1243,16 @@ class CanvasGraphics
 						closePath(true);
 					}
 
-					context.moveTo(positionX - offsetX, positionY - offsetY);
+					if (hasScale9Grid)
+					{
+						var scaledX = toScale9Position(positionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						var scaledY = toScale9Position(positionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+						context.moveTo(scaledX - offsetX, scaledY - offsetY);
+					}
+					else
+					{
+						context.moveTo(positionX - offsetX, positionY - offsetY);
+					}
 
 					if (c.thickness == null)
 					{
@@ -1293,7 +1300,17 @@ class CanvasGraphics
 						closePath(true);
 					}
 
-					context.moveTo(positionX - offsetX, positionY - offsetY);
+					if (hasScale9Grid)
+					{
+						var scaledX = toScale9Position(positionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						var scaledY = toScale9Position(positionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+						context.moveTo(scaledX - offsetX, scaledY - offsetY);
+					}
+					else
+					{
+						context.moveTo(positionX - offsetX, positionY - offsetY);
+					}
+
 					strokePattern = createGradientPattern(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
 						c.focalPointRatio);
 					context.strokeStyle = strokePattern;
@@ -1311,7 +1328,17 @@ class CanvasGraphics
 						closePath(true);
 					}
 
-					context.moveTo(positionX - offsetX, positionY - offsetY);
+					if (hasScale9Grid)
+					{
+						var scaledX = toScale9Position(positionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						var scaledY = toScale9Position(positionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+						context.moveTo(scaledX - offsetX, scaledY - offsetY);
+					}
+					else
+					{
+						context.moveTo(positionX - offsetX, positionY - offsetY);
+					}
+
 					if (c.bitmap.readable)
 					{
 						strokePattern = createBitmapFill(c.bitmap, c.repeat, c.smooth);
@@ -1493,6 +1520,14 @@ class CanvasGraphics
 					// var roundPixels = renderer.__roundPixels;
 					var alpha = CanvasGraphics.worldAlpha;
 
+					var scaledPositionX = positionX;
+					var scaledPositionY = positionY;
+					if (hasScale9Grid)
+					{
+						scaledPositionX = toScale9Position(scaledPositionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						scaledPositionY = toScale9Position(scaledPositionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+					}
+
 					var ri:Int;
 					var ti:Int;
 
@@ -1534,8 +1569,8 @@ class CanvasGraphics
 							tileTransform.ty = tileRect.y;
 						}
 
-						tileTransform.tx += positionX - offsetX;
-						tileTransform.ty += positionY - offsetY;
+						tileTransform.tx += scaledPositionX - offsetX;
+						tileTransform.ty += scaledPositionY - offsetY;
 						tileTransform.concat(transform);
 
 						// if (roundPixels) {
@@ -1856,6 +1891,10 @@ class CanvasGraphics
 						}
 					}
 
+					// top-left corner of the rectangle
+					positionX = c.x;
+					positionY = c.y;
+
 				case WINDING_EVEN_ODD:
 					windingRule = CanvasWindingRule.EVENODD;
 
@@ -1980,6 +2019,12 @@ class CanvasGraphics
 					context.closePath();
 				}
 			}
+		}
+
+		commands.clear();
+		if (positionX != 0.0 || positionY != 0.0)
+		{
+			commands.moveTo(positionX, positionY);
 		}
 		#end
 	}

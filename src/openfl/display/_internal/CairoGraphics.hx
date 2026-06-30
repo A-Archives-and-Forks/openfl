@@ -354,7 +354,6 @@ class CairoGraphics
 	{
 		cairo.newPath();
 		playCommands(fillCommands, false);
-		fillCommands.clear();
 	}
 
 	private static function endStroke():Void
@@ -362,7 +361,6 @@ class CairoGraphics
 		cairo.newPath();
 		playCommands(strokeCommands, true);
 		cairo.closePath();
-		strokeCommands.clear();
 	}
 
 	private static function toScale9Position(pos:Float, scale9Start:Float, scale9Center:Float, unscaledSize:Float, scale:Float):Float
@@ -813,9 +811,6 @@ class CairoGraphics
 							scaledAnchorX
 							- offsetX, scaledAnchorY
 							- offsetY);
-
-						positionX = scaledAnchorX;
-						positionY = scaledAnchorY;
 					}
 					else
 					{
@@ -827,10 +822,10 @@ class CairoGraphics
 							- offsetX,
 							c.anchorY
 							- offsetY);
-
-						positionX = c.anchorX;
-						positionY = c.anchorY;
 					}
+
+					positionX = c.anchorX;
+					positionY = c.anchorY;
 
 				case CURVE_TO:
 					var c = data.readCurveTo();
@@ -852,17 +847,14 @@ class CairoGraphics
 						}
 
 						quadraticCurveTo(scaledControlX - offsetX, scaledControlY - offsetY, scaledAnchorX - offsetX, scaledAnchorY - offsetY);
-
-						positionX = scaledAnchorX;
-						positionY = scaledAnchorY;
 					}
 					else
 					{
 						quadraticCurveTo(c.controlX - offsetX, c.controlY - offsetY, c.anchorX - offsetX, c.anchorY - offsetY);
-
-						positionX = c.anchorX;
-						positionY = c.anchorY;
 					}
+
+					positionX = c.anchorX;
+					positionY = c.anchorY;
 
 				case DRAW_CIRCLE:
 					var c = data.readDrawCircle();
@@ -914,6 +906,10 @@ class CairoGraphics
 						cairo.moveTo(c.x - offsetX + c.radius, c.y - offsetY);
 						cairo.arc(c.x - offsetX, c.y - offsetY, c.radius, 0, Math.PI * 2);
 					}
+
+					// the right-most point of the circle, centered vertically
+					positionX = c.x + c.radius;
+					positionY = c.y;
 
 				case DRAW_ELLIPSE:
 					var c = data.readDrawEllipse();
@@ -974,11 +970,19 @@ class CairoGraphics
 						cairo.curveTo(xm - ox, ye, x, ym + oy, x, ym);
 					}
 
+					// the right-most point of the ellipse, centered vertically
+					positionX = c.x + c.width;
+					positionY = c.y + c.height / 2;
+
 				case DRAW_ROUND_RECT:
 					var c = data.readDrawRoundRect();
 					hasPath = true;
 					drawRoundRect(c.x - offsetX, c.y - offsetY, c.width, c.height, c.ellipseWidth, c.ellipseHeight, scale9Grid, bounds.width, bounds.height,
 						graphics.__owner.scaleX, graphics.__owner.scaleY);
+
+					// bottom-right corner of the rectangle, above the radius
+					positionX = c.x + c.width;
+					positionY = c.y + c.height - c.ellipseHeight;
 
 				case LINE_TO:
 					var c = data.readLineTo();
@@ -997,13 +1001,10 @@ class CairoGraphics
 							applyScale9GridScaledY(scaledY);
 						}
 
-						if (positionX != scaledX || positionY != scaledY)
+						if (positionX != c.x || positionY != c.y)
 						{
 							cairo.lineTo(scaledX - offsetX, scaledY - offsetY);
 						}
-
-						positionX = scaledX;
-						positionY = scaledY;
 					}
 					else
 					{
@@ -1013,10 +1014,10 @@ class CairoGraphics
 							// position is equal to the new position
 							cairo.lineTo(c.x - offsetX, c.y - offsetY);
 						}
-
-						positionX = c.x;
-						positionY = c.y;
 					}
+
+					positionX = c.x;
+					positionY = c.y;
 
 					if (positionX == startX && positionY == startY)
 					{
@@ -1040,17 +1041,14 @@ class CairoGraphics
 						}
 
 						cairo.moveTo(scaledX - offsetX, scaledY - offsetY);
-
-						positionX = scaledX;
-						positionY = scaledY;
 					}
 					else
 					{
 						cairo.moveTo(c.x - offsetX, c.y - offsetY);
-
-						positionX = c.x;
-						positionY = c.y;
 					}
+
+					positionX = c.x;
+					positionY = c.y;
 
 					if (setStart && positionX != startX && positionY != startY)
 					{
@@ -1068,7 +1066,16 @@ class CairoGraphics
 						closePath(true);
 					}
 
-					cairo.moveTo(positionX - offsetX, positionY - offsetY);
+					if (hasScale9Grid)
+					{
+						var scaledX = toScale9Position(positionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						var scaledY = toScale9Position(positionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+						cairo.moveTo(scaledX - offsetX, scaledY - offsetY);
+					}
+					else
+					{
+						cairo.moveTo(positionX - offsetX, positionY - offsetY);
+					}
 
 					if (c.thickness == null)
 					{
@@ -1134,7 +1141,17 @@ class CairoGraphics
 						closePath(true);
 					}
 
-					cairo.moveTo(positionX - offsetX, positionY - offsetY);
+					if (hasScale9Grid)
+					{
+						var scaledX = toScale9Position(positionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						var scaledY = toScale9Position(positionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+						cairo.moveTo(scaledX - offsetX, scaledY - offsetY);
+					}
+					else
+					{
+						cairo.moveTo(positionX - offsetX, positionY - offsetY);
+					}
+
 					strokePattern = createGradientPattern(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
 						c.focalPointRatio);
 
@@ -1150,7 +1167,16 @@ class CairoGraphics
 						closePath(true);
 					}
 
-					cairo.moveTo(positionX - offsetX, positionY - offsetY);
+					if (hasScale9Grid)
+					{
+						var scaledX = toScale9Position(positionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						var scaledY = toScale9Position(positionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+						cairo.moveTo(scaledX - offsetX, scaledY - offsetY);
+					}
+					else
+					{
+						cairo.moveTo(positionX - offsetX, positionY - offsetY);
+					}
 
 					if (c.bitmap.readable)
 					{
@@ -1318,6 +1344,14 @@ class CairoGraphics
 					// var roundPixels = renderer.__roundPixels;
 					var alpha = CairoGraphics.worldAlpha;
 
+					var scaledPositionX = positionX;
+					var scaledPositionY = positionY;
+					if (hasScale9Grid)
+					{
+						scaledPositionX = toScale9Position(scaledPositionX, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
+						scaledPositionY = toScale9Position(scaledPositionY, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
+					}
+
 					var ri:Int;
 					var ti:Int;
 
@@ -1357,8 +1391,8 @@ class CairoGraphics
 							tileTransform.ty = tileRect.y;
 						}
 
-						tileTransform.tx += positionX - offsetX;
-						tileTransform.ty += positionY - offsetY;
+						tileTransform.tx += scaledPositionX - offsetX;
+						tileTransform.ty += scaledPositionY - offsetY;
 						tileTransform.concat(transform);
 
 						// if (roundPixels) {
@@ -1667,6 +1701,10 @@ class CairoGraphics
 						cairo.rectangle(c.x - offsetX, c.y - offsetY, c.width, c.height);
 					}
 
+					// top-left corner of the rectangle
+					positionX = c.x;
+					positionY = c.y;
+
 				case WINDING_EVEN_ODD:
 					data.readWindingEvenOdd();
 					cairo.fillRule = EVEN_ODD;
@@ -1802,6 +1840,12 @@ class CairoGraphics
 				cairo.translate(bounds.x, bounds.y);
 				cairo.closePath();
 			}
+		}
+
+		commands.clear();
+		if (positionX != 0.0 || positionY != 0.0)
+		{
+			commands.moveTo(positionX, positionY);
 		}
 	}
 
