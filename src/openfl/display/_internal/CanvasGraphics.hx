@@ -39,6 +39,7 @@ class CanvasGraphics
 {
 	private static inline var SIN45:Float = 0.70710678118654752440084436210485;
 	private static inline var TAN22:Float = 0.4142135623730950488016887242097;
+	private static inline var KAPPA = 0.5522848;
 	private static var allowSmoothing:Bool;
 	private static var bitmapRepeat:Bool;
 	private static var bounds:Rectangle;
@@ -525,6 +526,135 @@ class CanvasGraphics
 		#end
 	}
 
+	/**
+		Draws an ellipse that starts and stops at the right-most point, centered
+		vertically.
+	**/
+	private static function drawEllipse(x:Float, y:Float, width:Float, height:Float, ?scale9Grid:Rectangle, ?scale9UnscaledWidth:Float,
+			?scale9UnscaledHeight:Float, ?scaleX:Float, ?scaleY:Float):Void
+	{
+		#if (js && html5)
+		if (width == 0.0 && height == 0.0)
+		{
+			// flash doesn't draw the ellipse if both the width and height are zero
+			return;
+		}
+
+		var ox = (width / 2) * KAPPA; // control point offset horizontal
+		var oy = (height / 2) * KAPPA; // control point offset vertical
+		var xe = x + width; // x-end
+		var ye = y + height; // y-end
+		var xm = x + width / 2; // x-middle
+		var ym = y + height / 2; // y-middle
+
+		if (scale9Grid != null)
+		{
+			var scaledX = toScale9Position(x, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledY = toScale9Position(y, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXe = toScale9Position(xe, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYe = toScale9Position(ye, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXm = toScale9Position(xm, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYm = toScale9Position(ym, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXmPlusOx = toScale9Position(xm + ox, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYmPlusOy = toScale9Position(ym + oy, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXmMinuxOx = toScale9Position(xm - ox, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYmMinuxOy = toScale9Position(ym - oy, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+
+			if ((fillScale9Bounds != null && bitmapFill != null) || (strokeScale9Bounds != null && bitmapStroke != null))
+			{
+				applyScale9GridUnscaledX(x);
+				applyScale9GridUnscaledY(y);
+				applyScale9GridUnscaledX(xe);
+				applyScale9GridUnscaledY(ye);
+				applyScale9GridScaledX(scaledX);
+				applyScale9GridScaledY(scaledY);
+				applyScale9GridScaledX(scaledXe);
+				applyScale9GridScaledY(scaledYe);
+			}
+
+			// TODO: Flash seems to use more curves than this
+			context.moveTo(scaledXe, scaledYm);
+			context.bezierCurveTo(scaledXe, scaledYmPlusOy, scaledXmPlusOx, scaledYe, scaledXm, scaledYe);
+			context.bezierCurveTo(scaledXmMinuxOx, scaledYe, scaledX, scaledYmPlusOy, scaledX, scaledYm);
+			context.bezierCurveTo(scaledX, scaledYmMinuxOy, scaledXmMinuxOx, scaledY, scaledXm, scaledY);
+			context.bezierCurveTo(scaledXmPlusOx, scaledY, scaledXe, scaledYmMinuxOy, scaledXe, scaledYm);
+		}
+		else
+		{
+			context.moveTo(xe, ym);
+			context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+			context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
+			context.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+			context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
+		}
+		#end
+	}
+
+	/**
+		Draws a circle that starts and stops at the right-most point, centered
+		vertically.
+	**/
+	private static function drawCircle(x:Float, y:Float, radius:Float, ?scale9Grid:Rectangle, ?scale9UnscaledWidth:Float, ?scale9UnscaledHeight:Float,
+			?scaleX:Float, ?scaleY:Float):Void
+	{
+		#if (js && html5)
+		if (radius == 0.0)
+		{
+			// flash doesn't draw the circle if the radius is zero
+			return;
+		}
+
+		if (scale9Grid != null)
+		{
+			x -= radius;
+			y -= radius;
+			var width = radius * 2;
+			var height = radius * 2;
+			var ox = radius * KAPPA; // control point offset horizontal
+			var oy = radius * KAPPA; // control point offset vertical
+			var xe = x + width; // x-end
+			var ye = y + height; // y-end
+			var xm = x + radius; // x-middle
+			var ym = y + radius; // y-middle
+
+			var scaledX = toScale9Position(x, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledY = toScale9Position(y, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXe = toScale9Position(xe, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYe = toScale9Position(ye, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXm = toScale9Position(xm, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYm = toScale9Position(ym, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXmPlusOx = toScale9Position(xm + ox, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYmPlusOy = toScale9Position(ym + oy, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+			var scaledXmMinuxOx = toScale9Position(xm - ox, scale9Grid.x, scale9Grid.width, scale9UnscaledWidth, scaleX);
+			var scaledYmMinuxOy = toScale9Position(ym - oy, scale9Grid.y, scale9Grid.height, scale9UnscaledHeight, scaleY);
+
+			if ((fillScale9Bounds != null && bitmapFill != null) || (strokeScale9Bounds != null && bitmapStroke != null))
+			{
+				applyScale9GridUnscaledX(x);
+				applyScale9GridUnscaledY(y);
+				applyScale9GridUnscaledX(xe);
+				applyScale9GridUnscaledY(ye);
+				applyScale9GridScaledX(scaledX);
+				applyScale9GridScaledY(scaledY);
+				applyScale9GridScaledX(scaledXe);
+				applyScale9GridScaledY(scaledYe);
+			}
+
+			// TODO: Flash seems to use more curves than this
+			context.moveTo(scaledXe, scaledYm);
+			context.bezierCurveTo(scaledXe, scaledYmPlusOy, scaledXmPlusOx, scaledYe, scaledXm, scaledYe);
+			context.bezierCurveTo(scaledXmMinuxOx, scaledYe, scaledX, scaledYmPlusOy, scaledX, scaledYm);
+			context.bezierCurveTo(scaledX, scaledYmMinuxOy, scaledXmMinuxOx, scaledY, scaledXm, scaledY);
+			context.bezierCurveTo(scaledXmPlusOx, scaledY, scaledXe, scaledYmMinuxOy, scaledXe, scaledYm);
+		}
+		else
+		{
+			context.moveTo(x + radius, y);
+			context.arc(x, y, radius, 0, Math.PI * 2);
+		}
+		#end
+	}
+
 	private static function endFill():Void
 	{
 		#if (js && html5)
@@ -952,17 +1082,6 @@ class CanvasGraphics
 
 		var data = new DrawCommandReader(commands);
 
-		var x:Float;
-		var y:Float;
-		var width:Float;
-		var height:Float;
-		var kappa = 0.5522848;
-		var ox:Float;
-		var oy:Float;
-		var xe:Float;
-		var ye:Float;
-		var xm:Float;
-		var ym:Float;
 		var r:Int;
 		var g:Int;
 		var b:Int;
@@ -1056,53 +1175,8 @@ class CanvasGraphics
 				case DRAW_CIRCLE:
 					var c = data.readDrawCircle();
 					hasPath = true;
-
-					if (hasScale9Grid)
-					{
-						var scaledLeft = toScale9Position(c.x - c.radius, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
-						var scaledTop = toScale9Position(c.y - c.radius, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
-						var scaledRight = toScale9Position(c.x + c.radius, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
-						var scaledBottom = toScale9Position(c.y + c.radius, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
-
-						if ((fillScale9Bounds != null && bitmapFill != null) || (strokeScale9Bounds != null && bitmapStroke != null))
-						{
-							applyScale9GridUnscaledX(c.x - c.radius);
-							applyScale9GridUnscaledY(c.y - c.radius);
-							applyScale9GridUnscaledX(c.x + c.radius);
-							applyScale9GridUnscaledY(c.y + c.radius);
-							applyScale9GridScaledX(scaledLeft);
-							applyScale9GridScaledY(scaledTop);
-							applyScale9GridScaledX(scaledRight);
-							applyScale9GridScaledY(scaledBottom);
-						}
-
-						x = scaledLeft - offsetX;
-						y = scaledTop - offsetY;
-						width = scaledRight - scaledLeft;
-						height = scaledBottom - scaledTop;
-
-						if (width != 0.0 || height != 0.0)
-						{
-							ox = (width / 2) * kappa; // control point offset horizontal
-							oy = (height / 2) * kappa; // control point offset vertical
-							xe = x + width; // x-end
-							ye = y + height; // y-end
-							xm = x + width / 2; // x-middle
-							ym = y + height / 2; // y-middle
-
-							context.moveTo(x, ym);
-							context.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-							context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-							context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-							context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-						}
-					}
-					else if (c.radius != 0.0)
-					{
-						// flash doesn't draw the circle if the radius is zero
-						context.moveTo(c.x - offsetX + c.radius, c.y - offsetY);
-						context.arc(c.x - offsetX, c.y - offsetY, c.radius, 0, Math.PI * 2, true);
-					}
+					drawCircle(c.x - offsetX, c.y - offsetY, c.radius, scale9Grid, bounds.width, bounds.height, graphics.__owner.scaleX,
+						graphics.__owner.scaleY);
 
 					// the right-most point of the circle, centered vertically
 					positionX = c.x + c.radius;
@@ -1111,61 +1185,8 @@ class CanvasGraphics
 				case DRAW_ELLIPSE:
 					var c = data.readDrawEllipse();
 					hasPath = true;
-
-					if (hasScale9Grid)
-					{
-						// TODO: this is not how Flash behaves!
-						// Flash seems to use multiple curves instead
-						var scaledLeft = toScale9Position(c.x, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
-						var scaledTop = toScale9Position(c.y, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
-						var scaledRight = toScale9Position(c.x + c.width, scale9Grid.x, scale9Grid.width, bounds.width, graphics.__owner.scaleX);
-						var scaledBottom = toScale9Position(c.y + c.height, scale9Grid.y, scale9Grid.height, bounds.height, graphics.__owner.scaleY);
-
-						if ((fillScale9Bounds != null && bitmapFill != null) || (strokeScale9Bounds != null && bitmapStroke != null))
-						{
-							applyScale9GridUnscaledX(c.x);
-							applyScale9GridUnscaledY(c.y);
-							applyScale9GridUnscaledX(c.x + c.width);
-							applyScale9GridUnscaledY(c.y + c.height);
-							applyScale9GridScaledX(scaledLeft);
-							applyScale9GridScaledY(scaledTop);
-							applyScale9GridScaledX(scaledRight);
-							applyScale9GridScaledY(scaledBottom);
-						}
-
-						x = scaledLeft;
-						y = scaledTop;
-						width = scaledRight - scaledLeft;
-						height = scaledBottom - scaledTop;
-					}
-					else
-					{
-						x = c.x;
-						y = c.y;
-						width = c.width;
-						height = c.height;
-					}
-
-					if (width != 0.0 || height != 0.0)
-					{
-						// flash doesn't draw the ellipse if both the width and
-						// height are zero
-						x -= offsetX;
-						y -= offsetY;
-
-						ox = (width / 2) * kappa; // control point offset horizontal
-						oy = (height / 2) * kappa; // control point offset vertical
-						xe = x + width; // x-end
-						ye = y + height; // y-end
-						xm = x + width / 2; // x-middle
-						ym = y + height / 2; // y-middle
-
-						context.moveTo(x, ym);
-						context.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-						context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-						context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-						context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-					}
+					drawEllipse(c.x - offsetX, c.y - offsetY, c.width, c.height, scale9Grid, bounds.width, bounds.height, graphics.__owner.scaleX,
+						graphics.__owner.scaleY);
 
 					// the right-most point of the ellipse, centered vertically
 					positionX = c.x + c.width;
@@ -2434,18 +2455,6 @@ class CanvasGraphics
 
 			var data = new DrawCommandReader(graphics.__commands);
 
-			var x:Float;
-			var y:Float;
-			var width:Float;
-			var height:Float;
-			var kappa = 0.5522848;
-			var ox:Float;
-			var oy:Float;
-			var xe:Float;
-			var ye:Float;
-			var xm:Float;
-			var ym:Float;
-
 			for (type in graphics.__commands.types)
 			{
 				switch (type)
@@ -2473,30 +2482,17 @@ class CanvasGraphics
 						var c = data.readDrawCircle();
 						context.arc(c.x - offsetX, c.y - offsetY, c.radius, 0, Math.PI * 2, true);
 
+						// the right-most point of the circle, centered vertically
+						positionX = c.x + c.radius;
+						positionY = c.y;
+
 					case DRAW_ELLIPSE:
 						var c = data.readDrawEllipse();
-						x = c.x;
-						y = c.y;
-						width = c.width;
-						height = c.height;
-						x -= offsetX;
-						y -= offsetY;
+						drawEllipse(c.x - offsetX, c.y - offsetY, c.width, c.height);
 
-						ox = (width / 2) * kappa; // control point offset horizontal
-						oy = (height / 2) * kappa; // control point offset vertical
-						xe = x + width; // x-end
-						ye = y + height; // y-end
-						xm = x + width / 2; // x-middle
-						ym = y + height / 2; // y-middle
-
-						// closePath (false);
-						// beginPath ();
-						context.moveTo(x, ym);
-						context.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-						context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-						context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-						context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-					// closePath (false);
+						// the right-most point of the ellipse, centered vertically
+						positionX = c.x + c.width;
+						positionY = c.y + c.height / 2;
 
 					case DRAW_RECT:
 						var c = data.readDrawRect();
@@ -2504,9 +2500,17 @@ class CanvasGraphics
 						context.rect(c.x - offsetX, c.y - offsetY, c.width, c.height);
 						context.closePath();
 
+						// top-left corner of the rectangle
+						positionX = c.x;
+						positionY = c.y;
+
 					case DRAW_ROUND_RECT:
 						var c = data.readDrawRoundRect();
 						drawRoundRect(c.x - offsetX, c.y - offsetY, c.width, c.height, c.ellipseWidth, c.ellipseHeight);
+
+						// bottom-right corner of the rectangle, above the radius
+						positionX = c.x + c.width;
+						positionY = c.y + c.height - c.ellipseHeight;
 
 					case LINE_TO:
 						var c = data.readLineTo();
